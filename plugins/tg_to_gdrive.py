@@ -68,12 +68,17 @@ async def tg_to_gdrive_upload(bot, update):
             )
         except Exception as e:
             logger.info(str(e))
-            pass
         logger.info(f"Upload Name : {up_name}")
         drive = gdriveTools.GoogleDriveHelper(up_name)
         gd_url, index_url = drive.upload(download_directory)
-        button = []
-        button.append([pyrogram.types.InlineKeyboardButton(text="☁️ CloudUrl ☁️", url=f"{gd_url}")])
+        button = [
+            [
+                pyrogram.types.InlineKeyboardButton(
+                    text="☁️ CloudUrl ☁️", url=f"{gd_url}"
+                )
+            ]
+        ]
+
         if Config.INDEX_URL:
             logger.info(index_url)
             button.append([pyrogram.types.InlineKeyboardButton(text="ℹ️ IndexUrl ℹ️", url=f"{index_url}")])

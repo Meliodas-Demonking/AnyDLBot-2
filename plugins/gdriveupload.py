@@ -49,12 +49,11 @@ async def gdrive_upload(bot, update):
             custom_file_name = dl_url[dl_url.rindex("/")+1:]
         elif dl_url.find('seedr') > -1:
             custom_file_name = dl_url[int(dl_url.rindex("/")) + 1:int(dl_url.rindex("?"))]
+        elif dl_url.find("/") > -1 and dl_url.find("?") > -1:
+            m_url = dl_url[:dl_url.rindex("?")]
+            custom_file_name = m_url[int(m_url.rindex("/")) + 1:]
         else:
-            if dl_url.find("/") > -1 and dl_url.find("?") > -1:
-                m_url = dl_url[:dl_url.rindex("?")]
-                custom_file_name = m_url[int(m_url.rindex("/")) + 1:]
-            else:
-                custom_file_name = dl_url[dl_url.rindex("/") + 1:]
+            custom_file_name = dl_url[dl_url.rindex("/") + 1:]
         custom_file_name = urllib.parse.unquote(custom_file_name)
     download_directory = tmp_directory_for_each_user + "/" + custom_file_name
     async with aiohttp.ClientSession() as session:
@@ -88,12 +87,17 @@ async def gdrive_upload(bot, update):
             )
         except Exception as e:
             logger.info(str(e))
-            pass
         logger.info(f"Upload Name : {up_name}")
         drive = gdriveTools.GoogleDriveHelper(up_name)
         gd_url,index_url=drive.upload(download_directory)
-        button = []
-        button.append([pyrogram.types.InlineKeyboardButton(text="☁️ CloudUrl ☁️", url=f"{gd_url}")])
+        button = [
+            [
+                pyrogram.types.InlineKeyboardButton(
+                    text="☁️ CloudUrl ☁️", url=f"{gd_url}"
+                )
+            ]
+        ]
+
         if Config.INDEX_URL:
             logger.info(index_url)
             button.append([pyrogram.types.InlineKeyboardButton(text="ℹ️ IndexUrl ℹ️", url=f"{index_url}")])

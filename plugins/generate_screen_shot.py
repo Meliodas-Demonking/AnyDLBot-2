@@ -91,7 +91,7 @@ async def generate_screen_shot(bot, update):
                                     media=image
                                 )
                             )
-                        i = i + 1
+                        i += 1
             await bot.send_media_group(
                 chat_id=update.chat.id,
                 disable_notification=True,

@@ -173,13 +173,15 @@ class GoogleDriveHelper:
             except HttpError as err:
                 if err.resp.get('content-type', '').startswith('application/json'):
                     reason = json.loads(err.content).get('error').get('errors')[0].get('reason')
-                    if reason == 'userRateLimitExceeded' or reason == 'dailyLimitExceeded':
-                        if Config.USE_SERVICE_ACCOUNTS:
-                            self.switchServiceAccount()
-                            LOGGER.info(f"Got: {reason}, Trying Again.")
-                            return self.upload_file(file_path, file_name, mime_type, parent_id)
-                    else:
+                    if reason not in [
+                        'userRateLimitExceeded',
+                        'dailyLimitExceeded',
+                    ]:
                         raise err
+                    if Config.USE_SERVICE_ACCOUNTS:
+                        self.switchServiceAccount()
+                        LOGGER.info(f"Got: {reason}, Trying Again.")
+                        return self.upload_file(file_path, file_name, mime_type, parent_id)
         self._file_uploaded_bytes = 0
         # Insert new permissions
         if not Config.IS_TEAM_DRIVE:
@@ -247,18 +249,21 @@ class GoogleDriveHelper:
         }
 
         try:
-            res = self.__service.files().copy(supportsAllDrives=True,fileId=file_id,body=body).execute()
-            return res
+            return (
+                self.__service.files()
+                .copy(supportsAllDrives=True, fileId=file_id, body=body)
+                .execute()
+            )
+
         except HttpError as err:
             if err.resp.get('content-type', '').startswith('application/json'):
                 reason = json.loads(err.content).get('error').get('errors')[0].get('reason')
-                if reason == 'userRateLimitExceeded' or reason == 'dailyLimitExceeded':
-                    if Config.USE_SERVICE_ACCOUNTS:
-                        self.switchServiceAccount()
-                        LOGGER.info(f"Got: {reason}, Trying Again.")
-                        return self.copyFile(file_id,dest_id)
-                else:
+                if reason not in ['userRateLimitExceeded', 'dailyLimitExceeded']:
                     raise err
+                if Config.USE_SERVICE_ACCOUNTS:
+                    self.switchServiceAccount()
+                    LOGGER.info(f"Got: {reason}, Trying Again.")
+                    return self.copyFile(file_id,dest_id)
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(5),
            retry=retry_if_exception_type(HttpError), before=before_log(LOGGER, logging.DEBUG))
@@ -465,5 +470,5 @@ class GoogleDriveHelper:
     def get_mime_type(self,file_path):
         mime = magic.Magic(mime=True)
         mime_type = mime.from_file(file_path)
-        mime_type = mime_type if mime_type else "text/plain"
+        mime_type = mime_type or "text/plain"
         return mime_type

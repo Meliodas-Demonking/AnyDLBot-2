@@ -33,7 +33,7 @@ from PIL import Image
 
 @pyrogram.Client.on_message(pyrogram.filters.command(["converttoaudio"]))
 async def convert_to_audio(bot, update):
-    if (update.reply_to_message is not None) and (update.reply_to_message.media is not None) :
+    if (update.reply_to_message is not None) and (update.reply_to_message.media is not None):
         description = Translation.CUSTOM_CAPTION_UL_FILE
         download_location = Config.DOWNLOAD_LOCATION + "/"
         a = await bot.send_message(
@@ -71,10 +71,8 @@ async def convert_to_audio(bot, update):
             # ref: message from @BotSupport
             width = 0
             height = 0
-            duration = 0
             metadata = extractMetadata(createParser(the_real_download_location))
-            if metadata.has("duration"):
-                duration = metadata.get('duration').seconds
+            duration = metadata.get('duration').seconds if metadata.has("duration") else 0
             thumb_image_path = Config.DOWNLOAD_LOCATION + "/" + str(update.from_user.id) + ".jpg"
             if not os.path.exists(thumb_image_path):
                 thumb_image_path = None
